@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Unites : MonoBehaviour {
+public class Unit : MonoBehaviour {
 
 	public Transform target;
 	float speed = 1;
@@ -19,13 +19,11 @@ public class Unites : MonoBehaviour {
 			targetIndex = 0;
 			StopCoroutine ("FollowPath");
 			StartCoroutine ("FollowPath");
-
 		}
 	}
 
 	IEnumerator FollowPath() {
 		Vector3 currentWaypoint = path [0];
-
 		while (true) {
 			if(transform.position == currentWaypoint) {
 				targetIndex++;
@@ -34,7 +32,6 @@ public class Unites : MonoBehaviour {
 				}
 				currentWaypoint = path[targetIndex];
 			}
-			transform.position = Vector3.MoveTowards (transform.position, currentWaypoint, speed);
 			yield return null;
 		}
 	}

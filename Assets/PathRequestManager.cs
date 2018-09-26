@@ -14,10 +14,12 @@ public class PathRequestManager : MonoBehaviour {
 	bool isProcessingPath;
 
 	void Awake() {
-		if (instance == null)
+
+		instance = this;
+		/*if (instance == null)
 			instance = this;
 		else if (instance != this)
-			Destroy (this);
+			Destroy (this);*/
 		pathfinding = GetComponent<Pathfinding> ();
 	}
 
