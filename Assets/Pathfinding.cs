@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Diagnostics;
+using System;
 
 public class Pathfinding : MonoBehaviour {
 
@@ -17,10 +18,8 @@ public class Pathfinding : MonoBehaviour {
 		StartCoroutine (FindPath (startPos, targetPos));
 	}
 
-	IEnumerator FindPath(Vector3 startPos, Vector3 targetPos) {
 
-		Stopwatch sw = new Stopwatch ();
-		sw.Start ();
+	IEnumerator FindPath(Vector3 startPos, Vector3 targetPos) {
 
 		Vector3[] waypoints = new Vector3[0];
 		bool pathSuccess = false;
@@ -28,8 +27,9 @@ public class Pathfinding : MonoBehaviour {
 		Node startNode = grid.NodeFromWorldPoint (startPos);
 		Node targetNode = grid.NodeFromWorldPoint (targetPos);
 
+		//Recherche de chemin A*
 		if (startNode.walkable && targetNode.walkable) {
-			List<Node> openSet = new List<Node> ();
+			Heap<Node> openSet = new Heap<Node> (grid.MaxSize);
 			HashSet<Node> closedSet = new HashSet<Node> ();
 			openSet.Add (startNode);
 
@@ -38,22 +38,10 @@ public class Pathfinding : MonoBehaviour {
 				closedSet.Add (currentNode);
 
 				if (currentNode == targetNode) {
-					sw.Stop ();
-					print ("Chemin trouvé : " + sw.ElapsedMilliseconds + " ms");
 					pathSuccess = true;
-
-					return;
+					break;
 				}
-
-				for (int i = 1; i < openSet.Count; i++) {
-					if (openSet [i].fCost < currentNode.fCost || openSet [i].fCost == currentNode.fCost && openSet [i].hCost < currentNode.hCost) {
-						currentNode = openSet [i];
-					}
-				}
-
-				openSet.Remove (currentNode);
-				closedSet.Add (currentNode);
-	
+					
 				foreach (Node neighbour in grid.GetNeighbours(currentNode)) {
 					if (!neighbour.walkable || closedSet.Contains (neighbour)) {
 						continue;
@@ -81,6 +69,7 @@ public class Pathfinding : MonoBehaviour {
 		requestManager.FinishedProcessingPath (waypoints, pathSuccess);
 	}
 
+	// Créé un chemin visible
 	Vector3[] Retracepath(Node startNode, Node endNode){
 		List<Node> path = new List<Node> ();
 		Node currentNode = endNode;
@@ -94,15 +83,26 @@ public class Pathfinding : MonoBehaviour {
 		return waypoints;
 	}
 
+	/**
+	 * Simplifie le chemin
+	 **/
 	Vector3[] SimplifyPath(List<Node> path) {
 		List<Vector3> waypoints = new List<Vector3> ();
-		Vector3 directionOld = Vector2.zero;
+		Vector2 directionOld = Vector2.zero;
 
 		for (int i = 1; i < path.Count; i++) {
-			Vector2 directionNew = new Vector2(path
+			Vector2 directionNew = new Vector2 (path[i-1].gridX - path[i].gridX,path[i-1].gridY - path[i].gridY);
+			if ( directionNew != directionOld ) {
+				waypoints.Add (path [i].worldPosition);
+			}
+			directionOld = directionNew;
 		}
+		return waypoints.ToArray ();
 	}
 
+	/**
+	 * Trouve la distance entre 2 node en fonction de leur coordonnées gridX et gridY 
+	 **/
 	int GetDistance(Node nodeA, Node nodeB) {
 		int distX = Mathf.Abs (nodeA.gridX - nodeB.gridX);	
 		int distY = Mathf.Abs (nodeA.gridY - nodeB.gridY);
